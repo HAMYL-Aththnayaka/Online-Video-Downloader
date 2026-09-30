@@ -52,3 +52,49 @@ def process_download_task(job_id:str,url:str,format_id:Optional[str]):
     except Exception as err:
         JOB_STORE[job_id]["status"] = "failed"
         JOB_STORE[job_id]['error']= str(err)
+
+
+
+@app.post("/api/jobs")
+def create_job(payload:DownloadRequest , background_tasks:BackgroundTasks):
+    """Creates a download task and returns a job_id immediately."""
+    job_id = str(uuid.uuid4())
+    JOB_STORE[job_id]={
+        "id":job_id,
+        "status":"queued",
+        "file_path":None,
+        "error":None
+    }
+    background_tasks.add_task(process_download_task,job_id,str(payload.url),payload.format_id)
+    return {
+        "job_id":job_id ,
+        "status":"queued",
+          }
+
+@app.get("/api/jobs/{job_id}")
+def get_jov_status(job_id:str):
+    """Frontend polls this route to monitor progress."""
+    job = JOB_STORE.get(job_id)
+    if not job:
+        raise HTTPException(
+                status_code=404,
+                detail="job_not found"
+             )
+    return job
+
+
+@app.get("/api/download/{job_id}")
+def retrieve_file(job_id:str):
+    """Triggers browser file download once the status is completed."""
+    job = JOB_STORE.get(job_id) 
+    if not job or job.get("status") != "completed":
+        raise HTTPException(
+            status_code = 404 ,
+            detail = "File is not ready or failed"
+        )
+
+    return FileResponse(
+        path =job['file_path'],
+        filename=f"video_{job_id[:8]}.mp4",
+        media_type="video/mp4"
+    )
