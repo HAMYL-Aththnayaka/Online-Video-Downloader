@@ -1,6 +1,6 @@
 import os
 import uuid
-from typing import Disc ,Optional 
+from typing import Dict ,Optional 
 from fastapi import FastAPI, BackgroundTasks, HTTPException , status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
@@ -19,7 +19,7 @@ app.add_middleware(
 )
 
 extractor = MediaExtractor(download_dir='downloads')
-JOB_STORE:Disc[str,Disc]={}
+JOB_STORE:Dict[str,Dict]={}
 
 class InspectRequest(BaseModel):
     url:HttpUrl
@@ -39,7 +39,7 @@ def inspect_url(payload:InspectRequest):
     except Exception as e:
         raise HTTPException(
             status_code = status.HTTP_400_BAD_REQUEST,
-            details=f"Metadata extraction failed:{str(e)}"
+            detail=f"Metadata extraction failed:{str(e)}"
         )
 
 def process_download_task(job_id:str,url:str,format_id:Optional[str]):

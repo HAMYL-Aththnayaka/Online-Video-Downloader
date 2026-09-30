@@ -7,7 +7,7 @@ class MediaExtractor:
         self.download_dir = download_dir
         os.makedirs(self.download_dir,exist_ok=True)
 
-    def get_info(selfmurl:str)->Dict[str,Any]:
+    def get_info(self,url:str)->Dict[str,Any]:
         """
             Extracts video metadata without downloading bytes.
         """
